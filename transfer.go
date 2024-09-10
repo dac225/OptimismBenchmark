@@ -1,4 +1,3 @@
-// transfer.go
 package main
 
 import (
@@ -15,7 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-// TransferETH sends ETH from one account to another multiple times.
+// TransferETH sends ETH from one account to another multiple times using EIP-1559 transactions.
 func TransferETH(client *ethclient.Client, privateKey *ecdsa.PrivateKey, receiverAddress common.Address, iterations int) error {
 	nonce := uint64(0)
 
@@ -44,22 +43,36 @@ func TransferETH(client *ethclient.Client, privateKey *ecdsa.PrivateKey, receive
 		value := new(big.Int)
 		value.SetString("1000000000000000000", 10) // 1 ETH
 
-		// Set gas limit and gas price
+		// Suggest gas price and set gas limit
 		gasLimit := uint64(25000) // in units
-		gasPrice, err := client.SuggestGasPrice(context.Background())
+		tipCap, err := client.SuggestGasTipCap(context.Background())
 		if err != nil {
 			return err
 		}
+		baseFee, err := client.SuggestGasPrice(context.Background())
+		if err != nil {
+			return err
+		}
+		maxFeePerGas := new(big.Int).Add(baseFee, tipCap)
 
-		// Create the transaction
-		tx := types.NewTransaction(nonce, receiverAddress, value, gasLimit, gasPrice, nil)
+		// Create the EIP-1559 transaction (Dynamic Fee transaction)
+		tx := types.NewTx(&types.DynamicFeeTx{
+			ChainID:   big.NewInt(901), // Optimism L2 devnet chain ID
+			Nonce:     nonce,
+			To:        &receiverAddress,
+			Value:     value,
+			Gas:       gasLimit,
+			GasTipCap: tipCap,
+			GasFeeCap: maxFeePerGas,
+			Data:      nil,
+		})
 
 		// Sign the transaction
 		chainID, err := client.NetworkID(context.Background())
 		if err != nil {
 			return err
 		}
-		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)
+		signedTx, err := types.SignTx(tx, types.NewLondonSigner(chainID), privateKey)
 		if err != nil {
 			return err
 		}

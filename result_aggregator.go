@@ -14,7 +14,7 @@ type OptimismAggregator struct{}
 
 var (
 	opTxEndTimeMap    = make(map[string]int64)
-	optimismBlockTime = 12 * time.Second
+	optimismBlockTime = 6 * time.Second // Updated block time for Optimism devnet
 )
 
 func NewOptimismAggregator() *OptimismAggregator {
@@ -64,7 +64,7 @@ func (aggregator *OptimismAggregator) GetBenchTPS(client *ethclient.Client, stop
 			}
 
 			// Poll every few seconds to avoid spamming the node
-			time.Sleep(6 * time.Second) // Adjust the polling interval as necessary
+			time.Sleep(3 * time.Second) // Updated polling interval
 		}
 	}
 

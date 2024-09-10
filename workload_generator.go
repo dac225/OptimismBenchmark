@@ -39,7 +39,7 @@ func NewOptimismWorkloadGenerator() *OptimismWorkloadGenerator {
 // InitGenerator initializes the generator with a client connection and loads configuration
 func (generator *OptimismWorkloadGenerator) InitGenerator(client *ethclient.Client) {
 	generator.OpClient = client
-	generator.ChainID = getNetworkID(client)
+	generator.ChainID = big.NewInt(901) // Optimism L2 devnet chain ID
 	generator.GasPrice = getGasPrice(client)
 
 	// Initialize the Nonces map
@@ -60,10 +60,10 @@ func (generator *OptimismWorkloadGenerator) GenerateWorkload(config WorkloadConf
 		for j := 0; j < config.WorkerThreads; j++ {
 			transactions := [][]byte{}
 
-			// Generate private key (replace this with actual private keys if available)
-			privateKey, err := crypto.GenerateKey()
+			// Use pre-funded private keys from Optimism devnet
+			privateKey, err := crypto.HexToECDSA("ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80")
 			if err != nil {
-				log.Fatal("Failed to generate private key: ", err)
+				log.Fatal("Failed to parse private key: ", err)
 			}
 
 			gasLimit := uint64(21000) // gas units
@@ -102,14 +102,6 @@ func (generator *OptimismWorkloadGenerator) GenerateWorkload(config WorkloadConf
 }
 
 // Utility functions to get Network ID, Gas Price, and Nonce
-func getNetworkID(client *ethclient.Client) *big.Int {
-	chainID, err := client.NetworkID(context.Background())
-	if err != nil {
-		log.Fatalf("Failed to retrieve network ID: %v", err)
-	}
-	return chainID
-}
-
 func getGasPrice(client *ethclient.Client) *big.Int {
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	if err != nil {

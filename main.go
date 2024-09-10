@@ -9,10 +9,10 @@ import (
 )
 
 func main() {
-	// Connect to the local L2 node
-	client, err := ethclient.Dial("http://localhost:9545")
+	// Connect to the local Optimism L2 devnet node
+	client, err := ethclient.Dial("http://localhost:8545")
 	if err != nil {
-		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
+		log.Fatalf("Failed to connect to the Optimism L2 client: %v", err)
 	}
 
 	// Initialize the workload generator
